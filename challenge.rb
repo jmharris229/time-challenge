@@ -90,11 +90,11 @@ def update_time(time, minutes_to_change_by)
     hour, minute, initial_day_half = time_components[0].to_i, time_components[1].to_i, time_components[2]
 
     # we need a base time unit, convert everything to seconds
-    current_hour_in_seconds = hour_in_seconds(twenty_four_hour(initial_day_half, hour));
-    current_minute_in_seconds = minutes_to_seconds(minute);
+    current_hour_in_seconds = hour_in_seconds(twenty_four_hour(initial_day_half, hour))
+    current_minute_in_seconds = minutes_to_seconds(minute)
     minutes_to_change_by_in_seconds = minutes_to_seconds(minutes_to_change_by)
-    total_seconds = total(current_hour_in_seconds, current_minute_in_seconds);
-    new_total_seconds = total(total_seconds, minutes_to_change_by_in_seconds);
+    total_seconds = total(current_hour_in_seconds, current_minute_in_seconds)
+    new_total_seconds = total(total_seconds, minutes_to_change_by_in_seconds)
 
     # If the time crosses to the next/previous day
     if new_total_seconds >= day_in_seconds || new_total_seconds <= 0
