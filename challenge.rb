@@ -44,11 +44,8 @@ end
 def update_time(time, minutes_to_change_by)
   begin
     # get each individual time component
-    # this will make it easier to do calculations on our time
     time_components = time.gsub(":", " ").split
-    hour = time_components[0].to_i
-    minute = time_components[1].to_i
-    day_half = time_components[2]
+    hour, minute, day_half = time_components[0].to_i, time_components[1].to_i, time_components[2]
 
     # we need a base time unit, convert everything to seconds
     current_hour_in_seconds = 1000 * 60 * 60 * ((day_half == "PM" && hour != 12) ? 12 + hour : hour); # if we are in the PM, we need to add 12, as 3PM is really the 15th hour on a 24 hour day
@@ -57,7 +54,7 @@ def update_time(time, minutes_to_change_by)
     total_seconds = current_hour_in_seconds + current_minute_in_seconds;
     new_total_seconds = total_seconds + minutes_to_change_by_in_seconds
 
-    # If the time crosses to the next day
+    # If the time crosses to the next/previous day
     if new_total_seconds >= day_in_seconds || new_total_seconds <= 0
       new_total_seconds = handle_crossing_day(total_seconds, new_total_seconds, minutes_to_change_by_in_seconds)
     end
