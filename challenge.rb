@@ -8,8 +8,16 @@
 #  Need to keep track of AM and PM. If a time passes 12, it needs to flip to the opposite.
 #  If the time passes 12:59, it needs to reset back to 1, not 13.
 
-@day_in_seconds = 1000 * 60 * 60 * 24;
-@hour_in_seconds = 1000 * 60 * 60;
+def day_in_seconds
+  1000 * 60 * 60 * 24
+end
+
+def hour_in_seconds
+  1000 * 60 * 60
+end
+
+
+day_in_seconds =
 
 def update_time(time, minutes_to_change_by)
   begin
@@ -21,48 +29,42 @@ def update_time(time, minutes_to_change_by)
     day_half = time_components[2]
 
     # we need a base time unit, convert everything to seconds
-
     current_hour_in_seconds = 1000 * 60 * 60 * ((day_half == "PM" && hour != 12) ? 12 + hour : hour); # if we are in the PM, we need to add 12, as 3PM is really the 15th hour on a 24 hour day
     current_minute_in_seconds = 1000 * 60 * minute;
     minutes_to_change_by_in_seconds = 1000 * 60 * minutes_to_change_by
-
-    # add our seconds together to get our initial time in seconds
     total_seconds = current_hour_in_seconds + current_minute_in_seconds;
-
-    # get our new time in seconds
-    # this should handle positive and negative minutes_to_change_by amounts
     new_total_seconds = total_seconds + minutes_to_change_by_in_seconds
 
     # If the time crosses to the next day
-    if new_total_seconds >= @day_in_seconds
+    if new_total_seconds >= day_in_seconds
       # scenario for multi day minute add
       # meaning the minutes you are adding is greater than the amount in a day
-      if minutes_to_change_by_in_seconds >= @day_in_seconds
+      if minutes_to_change_by_in_seconds >= day_in_seconds
         # days are irrelevant when dealing with just time, as its circular.
         # so we want the remainder of the minute change / day in seconds.
-        single_day_change = minutes_to_change_by_in_seconds % @day_in_seconds
+        single_day_change = minutes_to_change_by_in_seconds % day_in_seconds
         # we can then add this to our total seconds and if we still crossed a new day, subtract
         pre_nts = total_seconds + single_day_change
-        new_total_seconds = pre_nts - (pre_nts >= @day_in_seconds ? @day_in_seconds : 0)
+        new_total_seconds = pre_nts - (pre_nts >= day_in_seconds ? day_in_seconds : 0)
       else
-        new_total_seconds = new_total_seconds - @day_in_seconds
+        new_total_seconds = new_total_seconds - day_in_seconds
       end
     elsif new_total_seconds <= 0
-      if (minutes_to_change_by_in_seconds / @day_in_seconds) < -1
-        single_day_change = minutes_to_change_by_in_seconds % @day_in_seconds
+      if (minutes_to_change_by_in_seconds / day_in_seconds) < -1
+        single_day_change = minutes_to_change_by_in_seconds % day_in_seconds
         new_total_seconds = (total_seconds - (single_day_change).abs).abs
       else
         # going back in time from 12:05 to 11:55 the previous day
-        new_total_seconds = @day_in_seconds - (new_total_seconds).abs
+        new_total_seconds = day_in_seconds - (new_total_seconds).abs
       end
     end
 
     # get new time components
-    new_day_half = new_total_seconds < (@day_in_seconds / 2) ? "AM" : "PM"
-    floored_hour = (new_total_seconds / @hour_in_seconds).floor
+    new_day_half = new_total_seconds < (day_in_seconds / 2) ? "AM" : "PM"
+    floored_hour = (new_total_seconds / hour_in_seconds).floor
     floored_hour = (floored_hour == 0) ? 12 : floored_hour
     new_hour = floored_hour - ((new_day_half == "AM" || floored_hour == 12) ? 0 : 12)
-    new_minute = ((new_total_seconds % @hour_in_seconds) / 1000 / 60)
+    new_minute = ((new_total_seconds % hour_in_seconds) / 1000 / 60)
 
     # contruct the new time
     # rjust used to add zero padding, this is for on the hour times, e.g. 1:00
