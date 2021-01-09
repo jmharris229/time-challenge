@@ -24,6 +24,10 @@ def total(a,b)
   a + b
 end
 
+def total_diff(a, b)
+  a - b
+end
+
 # if we are in the PM, we need to add 12, as 3PM is really the 15th hour on a 24 hour day
 def twenty_four_hour(day_half, hour)
   (day_half == "PM" && hour != 12) ? 12 + hour : hour
@@ -48,16 +52,17 @@ def handle_crossing_day(total_seconds, new_total_seconds, minutes_to_change_by_i
     if moves_to_next_day(minutes_to_change_by_in_seconds)
       single_day_change = seconds_remainder(minutes_to_change_by_in_seconds, day_in_seconds)
       pre_nts = total(total_seconds, single_day_change)
-      pre_nts - (pre_nts >= day_in_seconds ? day_in_seconds : 0)
+      subtract_amount = (pre_nts >= day_in_seconds ? day_in_seconds : 0)
+      total_diff(pre_nts, subtract_amount)
     else
-      new_total_seconds - day_in_seconds
+      total_diff(new_total_seconds, day_in_seconds)
     end
   elsif moves_to_previous_day(new_total_seconds)
     if (minutes_to_change_by_in_seconds / day_in_seconds) < -1
       single_day_change = seconds_remainder(minutes_to_change_by_in_seconds, day_in_seconds)
-      (total_seconds - (single_day_change).abs).abs
+      total_diff(total_seconds, (single_day_change).abs).abs
     else
-      day_in_seconds - (new_total_seconds).abs
+      total_diff(day_in_seconds, (new_total_seconds).abs)
     end
   end
 end
