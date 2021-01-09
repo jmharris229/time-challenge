@@ -37,27 +37,27 @@ def moves_to_previous_day(new_seconds)
   new_seconds <= 0
 end
 
-# scenario for multi day minute add
-# meaning the minutes you are adding is greater than the amount in a day
-# days are irrelevant when dealing with just time, as its circular.
-# so we want the remainder of the minute change / day in seconds.
-# we can then add this to our total seconds and if we still crossed a new day, subtract
-# going back in time from 12:05 to 11:55 the previous day
+def seconds_remainder(a, b)
+  a % b
+end
+
+# scenario for multi day calculations
+# days are irrelevant, we just need to calculate based on the remainder after full days removed
 def handle_crossing_day(total_seconds, new_total_seconds, minutes_to_change_by_in_seconds)
   if moves_to_next_day(new_total_seconds)
-    if minutes_to_change_by_in_seconds >= day_in_seconds
-      single_day_change = minutes_to_change_by_in_seconds % day_in_seconds
+    if moves_to_next_day(minutes_to_change_by_in_seconds)
+      single_day_change = seconds_remainder(minutes_to_change_by_in_seconds, day_in_seconds)
       pre_nts = total(total_seconds, single_day_change)
-      new_total_seconds = pre_nts - (pre_nts >= day_in_seconds ? day_in_seconds : 0)
+      pre_nts - (pre_nts >= day_in_seconds ? day_in_seconds : 0)
     else
-      new_total_seconds = new_total_seconds - day_in_seconds
+      new_total_seconds - day_in_seconds
     end
   elsif moves_to_previous_day(new_total_seconds)
     if (minutes_to_change_by_in_seconds / day_in_seconds) < -1
-      single_day_change = minutes_to_change_by_in_seconds % day_in_seconds
-      new_total_seconds = (total_seconds - (single_day_change).abs).abs
+      single_day_change = seconds_remainder(minutes_to_change_by_in_seconds, day_in_seconds)
+      (total_seconds - (single_day_change).abs).abs
     else
-      new_total_seconds = day_in_seconds - (new_total_seconds).abs
+      day_in_seconds - (new_total_seconds).abs
     end
   end
 end
@@ -85,7 +85,7 @@ def update_time(time, minutes_to_change_by)
     floored_hour = (new_total_seconds / hour_in_seconds).floor
     floored_hour = (floored_hour == 0) ? 12 : floored_hour
     new_hour = floored_hour - ((new_day_half == "AM" || floored_hour == 12) ? 0 : 12)
-    new_minute = ((new_total_seconds % hour_in_seconds) / 1000 / 60)
+    new_minute = ((seconds_remainder(new_total_seconds,hour_in_seconds)) / 1000 / 60)
 
     # contruct the new time
     # rjust used to add zero padding, this is for on the hour times, e.g. 1:00
