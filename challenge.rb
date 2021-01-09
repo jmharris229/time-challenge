@@ -24,30 +24,39 @@ def total(a,b)
   a + b
 end
 
+# if we are in the PM, we need to add 12, as 3PM is really the 15th hour on a 24 hour day
 def twenty_four_hour(day_half, hour)
   (day_half == "PM" && hour != 12) ? 12 + hour : hour
 end
 
+def moves_to_next_day(new_seconds)
+  new_seconds >= day_in_seconds
+end
+
+def moves_to_previous_day(new_seconds)
+  new_seconds <= 0
+end
+
+# scenario for multi day minute add
+# meaning the minutes you are adding is greater than the amount in a day
+# days are irrelevant when dealing with just time, as its circular.
+# so we want the remainder of the minute change / day in seconds.
+# we can then add this to our total seconds and if we still crossed a new day, subtract
+# going back in time from 12:05 to 11:55 the previous day
 def handle_crossing_day(total_seconds, new_total_seconds, minutes_to_change_by_in_seconds)
-  if new_total_seconds >= day_in_seconds
-    # scenario for multi day minute add
-    # meaning the minutes you are adding is greater than the amount in a day
+  if moves_to_next_day(new_total_seconds)
     if minutes_to_change_by_in_seconds >= day_in_seconds
-      # days are irrelevant when dealing with just time, as its circular.
-      # so we want the remainder of the minute change / day in seconds.
       single_day_change = minutes_to_change_by_in_seconds % day_in_seconds
-      # we can then add this to our total seconds and if we still crossed a new day, subtract
-      pre_nts = total_seconds + single_day_change
+      pre_nts = total(total_seconds, single_day_change)
       new_total_seconds = pre_nts - (pre_nts >= day_in_seconds ? day_in_seconds : 0)
     else
       new_total_seconds = new_total_seconds - day_in_seconds
     end
-  elsif new_total_seconds <= 0
+  elsif moves_to_previous_day(new_total_seconds)
     if (minutes_to_change_by_in_seconds / day_in_seconds) < -1
       single_day_change = minutes_to_change_by_in_seconds % day_in_seconds
       new_total_seconds = (total_seconds - (single_day_change).abs).abs
     else
-      # going back in time from 12:05 to 11:55 the previous day
       new_total_seconds = day_in_seconds - (new_total_seconds).abs
     end
   end
@@ -60,7 +69,7 @@ def update_time(time, minutes_to_change_by)
     hour, minute, day_half = time_components[0].to_i, time_components[1].to_i, time_components[2]
 
     # we need a base time unit, convert everything to seconds
-    current_hour_in_seconds = hour_in_seconds(twenty_four_hour(day_half, hour)); # if we are in the PM, we need to add 12, as 3PM is really the 15th hour on a 24 hour day
+    current_hour_in_seconds = hour_in_seconds(twenty_four_hour(day_half, hour));
     current_minute_in_seconds = minutes_to_seconds(minute);
     minutes_to_change_by_in_seconds = minutes_to_seconds(minutes_to_change_by)
     total_seconds = total(current_hour_in_seconds, current_minute_in_seconds);
