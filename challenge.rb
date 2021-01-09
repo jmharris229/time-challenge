@@ -60,7 +60,7 @@ def get_day_half(new_total_seconds)
   new_total_seconds < (day_in_seconds / 2) ? "AM" : "PM"
 end
 
-# scenario for cross 12 AM calculations
+# scenario for crossing 12 AM calculations
 # days are irrelevant, we just need to calculate based on the remainder after full days removed
 # if we arent traversing multiple days, account for that as well
 def handle_crossing_day(total_seconds, new_total_seconds, minutes_to_change_by_in_seconds)
