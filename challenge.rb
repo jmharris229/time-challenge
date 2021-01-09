@@ -12,8 +12,20 @@ def day_in_seconds
   1000 * 60 * 60 * 24
 end
 
-def hour_in_seconds
-  1000 * 60 * 60
+def hour_in_seconds(h = 1)
+  1000 * 60 * 60 * h
+end
+
+def minutes_to_seconds(minutes)
+  1000 * 60 * minutes
+end
+
+def total(a,b)
+  a + b
+end
+
+def twenty_four_hour(day_half, hour)
+  (day_half == "PM" && hour != 12) ? 12 + hour : hour
 end
 
 def handle_crossing_day(total_seconds, new_total_seconds, minutes_to_change_by_in_seconds)
@@ -48,11 +60,11 @@ def update_time(time, minutes_to_change_by)
     hour, minute, day_half = time_components[0].to_i, time_components[1].to_i, time_components[2]
 
     # we need a base time unit, convert everything to seconds
-    current_hour_in_seconds = 1000 * 60 * 60 * ((day_half == "PM" && hour != 12) ? 12 + hour : hour); # if we are in the PM, we need to add 12, as 3PM is really the 15th hour on a 24 hour day
-    current_minute_in_seconds = 1000 * 60 * minute;
-    minutes_to_change_by_in_seconds = 1000 * 60 * minutes_to_change_by
-    total_seconds = current_hour_in_seconds + current_minute_in_seconds;
-    new_total_seconds = total_seconds + minutes_to_change_by_in_seconds
+    current_hour_in_seconds = hour_in_seconds(twenty_four_hour(day_half, hour)); # if we are in the PM, we need to add 12, as 3PM is really the 15th hour on a 24 hour day
+    current_minute_in_seconds = minutes_to_seconds(minute);
+    minutes_to_change_by_in_seconds = minutes_to_seconds(minutes_to_change_by)
+    total_seconds = total(current_hour_in_seconds, current_minute_in_seconds);
+    new_total_seconds = total(total_seconds, minutes_to_change_by_in_seconds);
 
     # If the time crosses to the next/previous day
     if new_total_seconds >= day_in_seconds || new_total_seconds <= 0
