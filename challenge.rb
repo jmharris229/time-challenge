@@ -12,8 +12,8 @@ def day_in_seconds
   1000 * 60 * 60 * 24
 end
 
-def hour_in_seconds(h = 1)
-  1000 * 60 * 60 * h
+def hour_in_seconds(hour = 1)
+  1000 * 60 * 60 * hour
 end
 
 def minutes_to_seconds(minutes)
@@ -33,22 +33,24 @@ def total_diff(a, b)
   a - b
 end
 
-def moves_to_next_day(new_seconds)
+# use greater than equals to hit 0, for start of new day
+def moving_to_next_day(new_seconds)
   new_seconds >= day_in_seconds
 end
 
-def moves_to_previous_day(new_seconds)
+def moving_to_previous_day(new_seconds)
   new_seconds < 0
 end
 
-def days_in_minutes(minutes)
-  minutes / day_in_seconds
+def days_in_minutes(minutes_seconds)
+  minutes_seconds / day_in_seconds
 end
 
 def seconds_remainder(a, b)
   a % b
 end
 
+# if we have 3.43 hours, round down to 3, since we handle minutes separately
 def floor_hour(new_total_seconds, hour_in_seconds)
   (new_total_seconds / hour_in_seconds).floor
 end
@@ -58,10 +60,11 @@ def get_day_half(new_total_seconds)
   new_total_seconds < (day_in_seconds / 2) ? "AM" : "PM"
 end
 
-# scenario for multi day calculations
+# scenario for cross 12 AM calculations
 # days are irrelevant, we just need to calculate based on the remainder after full days removed
+# if we arent traversing multiple days, account for that as well
 def handle_crossing_day(total_seconds, new_total_seconds, minutes_to_change_by_in_seconds)
-  if moves_to_next_day(new_total_seconds)
+  if moving_to_next_day(new_total_seconds)
     if days_in_minutes(minutes_to_change_by_in_seconds) > 1
       single_day_change = seconds_remainder(minutes_to_change_by_in_seconds, day_in_seconds)
       pre_nts = total(total_seconds, single_day_change)
@@ -70,7 +73,7 @@ def handle_crossing_day(total_seconds, new_total_seconds, minutes_to_change_by_i
     else
       total_diff(new_total_seconds, day_in_seconds)
     end
-  elsif moves_to_previous_day(new_total_seconds)
+  elsif moving_to_previous_day(new_total_seconds)
     if days_in_minutes(minutes_to_change_by_in_seconds) < -1
       single_day_change = seconds_remainder(minutes_to_change_by_in_seconds, day_in_seconds)
       total_diff(total_seconds, (single_day_change).abs).abs
@@ -134,7 +137,6 @@ test_runner("multi day add test 2", "12:00 PM", 5045, "12:05 AM")
 test_runner("weird time add test", "8:59 AM", 185, "12:04 PM")
 test_runner("weird time add test 2", "3:43 AM", 130, "5:53 AM")
 
-
 test_runner("simple subtract test", "3:27 PM", -3, "3:24 PM")
 test_runner("medium subtract test", "3:30 AM", -46, "2:44 AM")
 test_runner("big subtract test", "9:00 AM", -200, "5:40 AM")
@@ -143,14 +145,13 @@ test_runner("multi day subtract test 2", "12:00 PM", -5045, "12:05 AM")
 test_runner("weird time subtract test", "8:59 AM", -185, "5:54 AM")
 test_runner("weird time subtract test 2", "3:43 AM", -130, "1:33 AM")
 
-
 test_runner("crossing twelve PM add test", "9:00 AM", 200, "12:20 PM")
 test_runner("crossing twelve PM subtract test", "1:00 PM", -120, "11:00 AM")
 
 test_runner("crossing twelve AM add test", "11:00 PM", 120, "1:00 AM")
 test_runner("crossing twelve AM subtract test", "1:00 AM", -120, "11:00 PM")
 
-test_runner("error handling no initial time test", nil, -120, "11:00 PM")
-test_runner("error handling no minute change test", "9:30 AM", nil, "11:00 PM")
 # error handling
 # expected to fail
+test_runner("error handling no initial time test", nil, -120, "11:00 PM")
+test_runner("error handling no minute change test", "9:30 AM", nil, "11:00 PM")
