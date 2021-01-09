@@ -20,7 +20,12 @@ def minutes_to_seconds(minutes)
   1000 * 60 * minutes
 end
 
-def total(a,b)
+# if we are in the PM, we need to add 12, as 3PM is really the 15th hour on a 24 hour day
+def twenty_four_hour(day_half, hour)
+  (day_half == "PM" && hour != 12) ? 12 + hour : hour
+end
+
+def total(a, b)
   a + b
 end
 
@@ -28,28 +33,36 @@ def total_diff(a, b)
   a - b
 end
 
-# if we are in the PM, we need to add 12, as 3PM is really the 15th hour on a 24 hour day
-def twenty_four_hour(day_half, hour)
-  (day_half == "PM" && hour != 12) ? 12 + hour : hour
-end
-
 def moves_to_next_day(new_seconds)
   new_seconds >= day_in_seconds
 end
 
 def moves_to_previous_day(new_seconds)
-  new_seconds <= 0
+  new_seconds < 0
+end
+
+def days_in_minutes(minutes)
+  minutes / day_in_seconds
 end
 
 def seconds_remainder(a, b)
   a % b
 end
 
+def floor_hour(new_total_seconds, hour_in_seconds)
+  (new_total_seconds / hour_in_seconds).floor
+end
+
+# if new_total_seconds is less than half the day in seconds we are in AM
+def get_day_half(new_total_seconds)
+  new_total_seconds < (day_in_seconds / 2) ? "AM" : "PM"
+end
+
 # scenario for multi day calculations
 # days are irrelevant, we just need to calculate based on the remainder after full days removed
 def handle_crossing_day(total_seconds, new_total_seconds, minutes_to_change_by_in_seconds)
   if moves_to_next_day(new_total_seconds)
-    if moves_to_next_day(minutes_to_change_by_in_seconds)
+    if days_in_minutes(minutes_to_change_by_in_seconds) > 1
       single_day_change = seconds_remainder(minutes_to_change_by_in_seconds, day_in_seconds)
       pre_nts = total(total_seconds, single_day_change)
       subtract_amount = (pre_nts >= day_in_seconds ? day_in_seconds : 0)
@@ -58,7 +71,7 @@ def handle_crossing_day(total_seconds, new_total_seconds, minutes_to_change_by_i
       total_diff(new_total_seconds, day_in_seconds)
     end
   elsif moves_to_previous_day(new_total_seconds)
-    if (minutes_to_change_by_in_seconds / day_in_seconds) < -1
+    if days_in_minutes(minutes_to_change_by_in_seconds) < -1
       single_day_change = seconds_remainder(minutes_to_change_by_in_seconds, day_in_seconds)
       total_diff(total_seconds, (single_day_change).abs).abs
     else
@@ -69,12 +82,12 @@ end
 
 def update_time(time, minutes_to_change_by)
   begin
-    # get each individual time component
+    # get each individual time components
     time_components = time.gsub(":", " ").split
-    hour, minute, day_half = time_components[0].to_i, time_components[1].to_i, time_components[2]
+    hour, minute, initial_day_half = time_components[0].to_i, time_components[1].to_i, time_components[2]
 
     # we need a base time unit, convert everything to seconds
-    current_hour_in_seconds = hour_in_seconds(twenty_four_hour(day_half, hour));
+    current_hour_in_seconds = hour_in_seconds(twenty_four_hour(initial_day_half, hour));
     current_minute_in_seconds = minutes_to_seconds(minute);
     minutes_to_change_by_in_seconds = minutes_to_seconds(minutes_to_change_by)
     total_seconds = total(current_hour_in_seconds, current_minute_in_seconds);
@@ -86,11 +99,10 @@ def update_time(time, minutes_to_change_by)
     end
 
     # get new time components
-    new_day_half = new_total_seconds < (day_in_seconds / 2) ? "AM" : "PM"
-    floored_hour = (new_total_seconds / hour_in_seconds).floor
-    floored_hour = (floored_hour == 0) ? 12 : floored_hour
+    new_day_half = get_day_half(new_total_seconds)
+    floored_hour = floor_hour(new_total_seconds, hour_in_seconds) == 0 ? 12 : floor_hour(new_total_seconds, hour_in_seconds)
     new_hour = floored_hour - ((new_day_half == "AM" || floored_hour == 12) ? 0 : 12)
-    new_minute = ((seconds_remainder(new_total_seconds,hour_in_seconds)) / 1000 / 60)
+    new_minute = ((seconds_remainder(new_total_seconds, hour_in_seconds)) / 1000 / 60)
 
     # contruct the new time
     # rjust used to add zero padding, this is for on the hour times, e.g. 1:00
