@@ -4,7 +4,7 @@ A basic clock implementation to add minutes using Ruby, without the use of any n
 
 To run the tests.
 
-- Download repo
+- pull down repo
 - from directory run `ruby challenge.rb`
 
 You should get an output of the results of the tests.
