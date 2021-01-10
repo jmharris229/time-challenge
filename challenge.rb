@@ -1,12 +1,15 @@
 #  NOTES
-#  Two arguments: a time, and a integer of minutes. for example, ("9:15 AM", 200)
+#  Write a function that takes two arguments: a time, and a integer of minutes. for example, ("9:15 AM", 200)
+#  Problem: take first argument and add the second argument (minutes) to the first argument, return the new time as a string, "[H]H:MM [AM|PM]"
 #  The problem does not state that it needs to subtract time, BUT assume it should be able to
-#  Problem: take first argument and add the minutes to the first argument, return the new time as a string
-#  example response: addTime("9:15 AM", 30) returns "9:45 AM"
+#  Example response: addTime("9:15 AM", 30) returns "9:45 AM"
 #  Write tests for validity and edge cases
 #  CANNOT USE date functions
 #  Need to keep track of AM and PM. If a time passes 12, it needs to flip to the opposite.
 #  If the time passes 12:59, it needs to reset back to 1, not 13.
+
+
+# --- Helper Methods ---
 
 def day_in_seconds
   1000 * 60 * 60 * 24
@@ -33,9 +36,8 @@ def total_diff(a, b)
   a - b
 end
 
-# use greater than equals to hit 0, for start of new day
 def moving_to_next_day(new_seconds)
-  new_seconds >= day_in_seconds
+  new_seconds > day_in_seconds
 end
 
 def moving_to_previous_day(new_seconds)
@@ -60,9 +62,11 @@ def get_day_half(new_total_seconds)
   new_total_seconds < (day_in_seconds / 2) ? "AM" : "PM"
 end
 
-# scenario for crossing 12 AM calculations
+# logic for crossing 12 AM
 # days are irrelevant, we just need to calculate based on the remainder after full days removed
 # if we arent traversing multiple days, account for that as well
+# days_in_minutes block handles multi day changes
+# if the result is > 1 or < -1, then that means you are traversing more than 1 day of time
 def handle_crossing_day(total_seconds, new_total_seconds, minutes_to_change_by_in_seconds)
   if moving_to_next_day(new_total_seconds)
     if days_in_minutes(minutes_to_change_by_in_seconds) > 1
@@ -83,6 +87,8 @@ def handle_crossing_day(total_seconds, new_total_seconds, minutes_to_change_by_i
   end
 end
 
+# --- Main Add Function ---
+
 def update_time(time, minutes_to_change_by)
   begin
     # get each individual time components
@@ -96,8 +102,8 @@ def update_time(time, minutes_to_change_by)
     total_seconds = total(current_hour_in_seconds, current_minute_in_seconds)
     new_total_seconds = total(total_seconds, minutes_to_change_by_in_seconds)
 
-    # If the time crosses to the next/previous day
-    if new_total_seconds >= day_in_seconds || new_total_seconds <= 0
+    # If minute change forces a crossing of 12AM
+    if moving_to_next_day(new_total_seconds) || moving_to_previous_day(new_total_seconds)
       new_total_seconds = handle_crossing_day(total_seconds, new_total_seconds, minutes_to_change_by_in_seconds)
     end
 
@@ -126,7 +132,6 @@ def test_runner(test_name, time_to_test, minute_change, expected_result)
   end
 end
 
-
 test_runner("coding assignment worksheet test", "9:13 AM", 200, "12:33 PM")
 
 test_runner("simple add test", "3:27 PM", 3, "3:30 PM")
@@ -151,7 +156,6 @@ test_runner("crossing twelve PM subtract test", "1:00 PM", -120, "11:00 AM")
 test_runner("crossing twelve AM add test", "11:00 PM", 120, "1:00 AM")
 test_runner("crossing twelve AM subtract test", "1:00 AM", -120, "11:00 PM")
 
-# error handling
-# expected to fail
+# error handling tests, expected to fail
 test_runner("error handling no initial time test", nil, -120, "11:00 PM")
 test_runner("error handling no minute change test", "9:30 AM", nil, "11:00 PM")
